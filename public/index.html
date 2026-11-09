@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sawari</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background: #f3f6fa;
+      color: #172033;
+    }
+    header {
+      padding: 24px;
+      color: white;
+      background: #087f5b;
+      text-align: center;
+    }
+    main {
+      max-width: 500px;
+      margin: auto;
+      padding: 16px;
+    }
+    .card {
+      background: white;
+      padding: 18px;
+      margin-bottom: 16px;
+      border-radius: 14px;
+      border: 1px solid #e3e8ef;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 8px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font: inherit;
+    }
+    button {
+      border: 0;
+      color: white;
+      background: #087f5b;
+      cursor: pointer;
+    }
+    .ride {
+      border: 1px solid #e3e8ef;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .price {
+      color: #087f5b;
+      font-weight: bold;
+    }
+    #message {
+      padding: 10px;
+      border-radius: 8px;
+      background: #e2e8f0;
+      margin-bottom: 12px;
+    }
+    #message:empty { display: none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🛺 Sawari</h1>
+  <p>Shared auto aur rickshaw dhoondo</p>
+</header>
+
+<main>
+  <p id="message"></p>
+
+  <div class="card">
+    <h2>🔎 Ride dhoondo</h2>
+
+    <label>From where?</label>
+    <input id="fromLocation" placeholder="Railway Station">
+
+    <label>To where?</label>
+    <input id="toLocation" placeholder="College">
+
+    <button onclick="findRides()">🔍 Find Ride</button>
+  </div>
+
+  <div id="rides"></div>
+
+  <div class="card">
+    <h2>🚗 Add my auto</h2>
+
+    <label>Driver name</label>
+    <input id="driver" placeholder="Ramesh">
+
+    <label>Vehicle type</label>
+    <select id="vehicleType">
+      <option value="auto">Auto</option>
+      <option value="rickshaw">Rickshaw</option>
+    </select>
+
+    <label>Vehicle number</label>
+    <input id="vehicleNumber" placeholder="DL 3A XX 1234">
+
+    <label>From where?</label>
+    <input id="driverFrom" placeholder="Railway Station">
+
+    <label>To where?</label>
+    <input id="driverTo" placeholder="College">
+
+    <label>Departure time</label>
+    <input id="departureTime" placeholder="5:30 PM">
+
+    <label>Fare per seat</label>
+    <input id="fare" type="number" min="1" placeholder="20">
+
+    <label>Seats available</label>
+    <input id="seats" type="number" min="1" max="6" placeholder="3">
+
+    <button onclick="addRide()">✅ Publish Ride</button>
+  </div>
+</main>
+
+<script>
+  const message = document.getElementById("message");
+  const ridesBox = document.getElementById("rides");
+
+  function showMessage(text) {
+    message.textContent = text;
+  }
+
+  async function findRides() {
+    const from = document.getElementById("fromLocation").value.trim();
+    const to = document.getElementById("toLocation").value.trim();
+
+    if (!from || !to) {
+      showMessage("From aur To dono likho");
+      return;
+    }
+
+    const response = await fetch(
+      `/api/rides?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`
+    );
+    const data = await response.json();
+
+    ridesBox.innerHTML = "";
+
+    if (!data.rides.length) {
+      ridesBox.innerHTML = "<p>Koi ride nahi mili.</p>";
+      return;
+    }
+
+    data.rides.forEach(ride => {
+      const div = document.createElement("div");
+      div.className = "ride";
+      div.innerHTML = `
+        <strong>${ride.vehicle_type.toUpperCase()}</strong><br>
+        ${ride.from_location} → ${ride.to_location}<br>
+        Driver: ${ride.driver}<br>
+        Time: ${ride.departure_time}<br>
+        Seats: ${ride.seats}<br>
+        <span class="price">₹${ride.fare} / seat</span><br><br>
+        <button onclick="bookRide(${ride.id})">Book Seat</button>
+      `;
+      ridesBox.appendChild(div);
+    });
+  }
+
+  async function bookRide(rideId) {
+    const passenger = prompt("Apna naam likho:");
+
+    if (!passenger) return;
+
+    const response = await fetch("/api/bookings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ride_id: rideId,
+        passenger,
+        seats: 1
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      showMessage(`Booking confirmed! ID: ${data.booking_id}`);
+      findRides();
+    } else {
+      showMessage(data.error);
+    }
+  }
+
+  async function addRide() {
+    const body = {
+      driver: document.getElementById("driver").value,
+      vehicle_type: document.getElementById("vehicleType").value,
+      vehicle_number: document.getElementById("vehicleNumber").value,
+      from_location: document.getElementById("driverFrom").value,
+      to_location: document.getElementById("driverTo").value,
+      departure_time: document.getElementById("departureTime").value,
+      fare: Number(document.getElementById("fare").value),
+      seats: Number(document.getElementById("seats").value)
+    };
+
+    const response = await fetch("/api/rides", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      showMessage("Ride publish ho gayi!");
+      findRides();
+    } else {
+      showMessage(data.error);
+    }
+  }
+</script>
+
+</body>
+</html>
