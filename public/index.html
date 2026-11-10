@@ -1,224 +1,160 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sawari</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: system-ui, sans-serif;
-      background: #f3f6fa;
-      color: #172033;
-    }
-    header {
-      padding: 24px;
-      color: white;
-      background: #087f5b;
-      text-align: center;
-    }
-    main {
-      max-width: 500px;
-      margin: auto;
-      padding: 16px;
-    }
-    .card {
-      background: white;
-      padding: 18px;
-      margin-bottom: 16px;
-      border-radius: 14px;
-      border: 1px solid #e3e8ef;
-    }
-    input, select, button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 8px;
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      font: inherit;
-    }
-    button {
-      border: 0;
-      color: white;
-      background: #087f5b;
-      cursor: pointer;
-    }
-    .ride {
-      border: 1px solid #e3e8ef;
-      border-radius: 12px;
-      padding: 14px;
-      margin-bottom: 12px;
-    }
-    .price {
-      color: #087f5b;
-      font-weight: bold;
-    }
-    #message {
-      padding: 10px;
-      border-radius: 8px;
-      background: #e2e8f0;
-      margin-bottom: 12px;
-    }
-    #message:empty { display: none; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sawari</title>
+<style>
+:root{--green:#087f5b;--bg:#f2f5fa;--ink:#18203a;--line:#d5dbe6;--muted:#5d667a;--red:#b3261e}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:var(--green);color:#fff;text-align:center;padding:28px 16px 36px}
+header h1{margin:0;font-size:2.2rem}
+header p{margin:8px 0 0}
+main{max-width:520px;margin:0 auto;padding:16px}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px;margin-bottom:18px}
+h2{margin:0 0 8px;font-size:1.5rem}
+label{display:block;margin:14px 0 6px}
+input,select{width:100%;padding:14px;border:1px solid var(--line);border-radius:12px;font:inherit;background:#fff}
+input:focus,select:focus,button:focus-visible{outline:3px solid var(--green);outline-offset:1px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button{width:100%;margin-top:16px;padding:14px;border:0;border-radius:12px;background:var(--green);color:#fff;font:inherit;font-weight:700;cursor:pointer}
+button:disabled{opacity:.6}
+.msg{margin:0 0 18px;padding:14px;border-radius:12px;background:#e1e7f0;display:none}
+.msg.show{display:block}
+.msg.err{background:#fde7e5;color:var(--red)}
+.msg.ok{background:#dff3ea;color:#065c42}
+.auto{border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px}
+.auto b{font-size:1.1rem}
+.auto p{margin:4px 0 0;color:var(--muted)}
+.auto a{display:inline-block;margin-top:10px;color:var(--green);font-weight:700}
+</style>
 </head>
 <body>
-
 <header>
   <h1>🛺 Sawari</h1>
   <p>Shared auto aur rickshaw dhoondo</p>
 </header>
-
 <main>
-  <p id="message"></p>
+  <div class="msg" id="msg" role="status"></div>
 
-  <div class="card">
+  <section class="card">
     <h2>🔎 Ride dhoondo</h2>
-
-    <label>From where?</label>
-    <input id="fromLocation" placeholder="Railway Station">
-
-    <label>To where?</label>
-    <input id="toLocation" placeholder="College">
-
-    <button onclick="findRides()">🔍 Find Ride</button>
-  </div>
-
-  <div id="rides"></div>
-
-  <div class="card">
-    <h2>🚗 Add my auto</h2>
-
-    <label>Driver name</label>
-    <input id="driver" placeholder="Ramesh">
-
-    <label>Vehicle type</label>
-    <select id="vehicleType">
+    <label for="from">From where?</label>
+    <input id="from" placeholder="Jaise: Panduwa">
+    <label for="to">To where?</label>
+    <input id="to" placeholder="Jaise: Shankha">
+    <label for="ftype">Vehicle</label>
+    <select id="ftype">
       <option value="auto">Auto</option>
-      <option value="rickshaw">Rickshaw</option>
+      <option value="bike">Bike</option>
+      <option value="cab">Cab</option>
     </select>
+    <button id="findBtn">🔍 Find Ride</button>
+    <div id="results"></div>
+  </section>
 
-    <label>Vehicle number</label>
-    <input id="vehicleNumber" placeholder="DL 3A XX 1234">
-
-    <label>From where?</label>
-    <input id="driverFrom" placeholder="Railway Station">
-
-    <label>To where?</label>
-    <input id="driverTo" placeholder="College">
-
-    <label>Departure time</label>
-    <input id="departureTime" placeholder="5:30 PM">
-
-    <label>Fare per seat</label>
-    <input id="fare" type="number" min="1" placeholder="20">
-
-    <label>Seats available</label>
-    <input id="seats" type="number" min="1" max="6" placeholder="3">
-
-    <button onclick="addRide()">✅ Publish Ride</button>
-  </div>
+  <section class="card">
+    <h2>🚗 Add my auto</h2>
+    <label for="dname">Driver name</label>
+    <input id="dname" placeholder="Ramesh">
+    <label for="dtype">Vehicle type</label>
+    <select id="dtype">
+      <option value="auto">Auto</option>
+      <option value="bike">Bike</option>
+      <option value="cab">Cab</option>
+    </select>
+    <div class="row">
+      <div><label for="dfrom">Route: from</label><input id="dfrom" placeholder="Panduwa"></div>
+      <div><label for="dto">Route: to</label><input id="dto" placeholder="Shankha"></div>
+    </div>
+    <div class="row">
+      <div><label for="dphone">Phone</label><input id="dphone" type="tel" inputmode="tel" placeholder="98xxxxxx"></div>
+      <div><label for="dprice">Price (₹)</label><input id="dprice" type="number" min="0" placeholder="20"></div>
+    </div>
+    <button id="addBtn">➕ Add my auto</button>
+  </section>
 </main>
-
 <script>
-  const message = document.getElementById("message");
-  const ridesBox = document.getElementById("rides");
+const $ = id => document.getElementById(id);
 
-  function showMessage(text) {
-    message.textContent = text;
+function esc(s) {
+  const d = document.createElement("div");
+  d.textContent = s == null ? "" : String(s);
+  return d.innerHTML;
+}
+
+function show(text, type) {
+  const m = $("msg");
+  m.textContent = text;
+  m.className = "msg show " + (type || "");
+  m.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+async function send(url, body) {
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  let data = {};
+  try { data = await res.json(); } catch {}
+  return { ok: res.ok, data };
+}
+
+$("findBtn").addEventListener("click", async () => {
+  const pickup = $("from").value.trim();
+  const drop = $("to").value.trim();
+  if (!pickup || !drop) return show("Pickup aur drop dono likho.", "err");
+
+  const btn = $("findBtn");
+  btn.disabled = true;
+  btn.textContent = "Dhoond rahe hain...";
+  $("results").innerHTML = "";
+  try {
+    const { ok, data } = await send("/api/find", { pickup, drop, vehicle: $("ftype").value });
+    if (!ok) return show(data.error || "Kuch gadbad hui. Dobara try karo.", "err");
+
+    const list = data.autos || [];
+    show(data.message, list.length ? "ok" : "err");
+    $("results").innerHTML = list.map(a => `
+      <div class="auto">
+        <b>${esc(a.name)}</b>
+        <p>${esc(a.vehicle)}${a.from ? ", " + esc(a.from) + " → " + esc(a.to) : ""}</p>
+        ${a.price ? `<p>₹${esc(a.price)}</p>` : ""}
+        ${a.phone ? `<a href="tel:${esc(a.phone)}">📞 ${esc(a.phone)}</a>` : ""}
+      </div>`).join("");
+  } catch {
+    show("Server se connect nahi hua. Ek minute ruk kar dobara try karo.", "err");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "🔍 Find Ride";
   }
+});
 
-  async function findRides() {
-    const from = document.getElementById("fromLocation").value.trim();
-    const to = document.getElementById("toLocation").value.trim();
+$("addBtn").addEventListener("click", async () => {
+  const name = $("dname").value.trim();
+  if (!name) return show("Driver ka naam likho.", "err");
 
-    if (!from || !to) {
-      showMessage("From aur To dono likho");
-      return;
-    }
-
-    const response = await fetch(
-      `/api/rides?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`
-    );
-    const data = await response.json();
-
-    ridesBox.innerHTML = "";
-
-    if (!data.rides.length) {
-      ridesBox.innerHTML = "<p>Koi ride nahi mili.</p>";
-      return;
-    }
-
-    data.rides.forEach(ride => {
-      const div = document.createElement("div");
-      div.className = "ride";
-      div.innerHTML = `
-        <strong>${ride.vehicle_type.toUpperCase()}</strong><br>
-        ${ride.from_location} → ${ride.to_location}<br>
-        Driver: ${ride.driver}<br>
-        Time: ${ride.departure_time}<br>
-        Seats: ${ride.seats}<br>
-        <span class="price">₹${ride.fare} / seat</span><br><br>
-        <button onclick="bookRide(${ride.id})">Book Seat</button>
-      `;
-      ridesBox.appendChild(div);
+  const btn = $("addBtn");
+  btn.disabled = true;
+  try {
+    const { ok, data } = await send("/api/autos", {
+      name,
+      vehicle: $("dtype").value,
+      from: $("dfrom").value.trim(),
+      to: $("dto").value.trim(),
+      phone: $("dphone").value.trim(),
+      price: $("dprice").value.trim()
     });
+    show(ok ? data.message : (data.error || "Add nahi hua."), ok ? "ok" : "err");
+    if (ok) ["dname", "dfrom", "dto", "dphone", "dprice"].forEach(i => $(i).value = "");
+  } catch {
+    show("Server se connect nahi hua. Dobara try karo.", "err");
+  } finally {
+    btn.disabled = false;
   }
-
-  async function bookRide(rideId) {
-    const passenger = prompt("Apna naam likho:");
-
-    if (!passenger) return;
-
-    const response = await fetch("/api/bookings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ride_id: rideId,
-        passenger,
-        seats: 1
-      })
-    });
-
-    const data = await response.json();
-
-    if (data.success) {
-      showMessage(`Booking confirmed! ID: ${data.booking_id}`);
-      findRides();
-    } else {
-      showMessage(data.error);
-    }
-  }
-
-  async function addRide() {
-    const body = {
-      driver: document.getElementById("driver").value,
-      vehicle_type: document.getElementById("vehicleType").value,
-      vehicle_number: document.getElementById("vehicleNumber").value,
-      from_location: document.getElementById("driverFrom").value,
-      to_location: document.getElementById("driverTo").value,
-      departure_time: document.getElementById("departureTime").value,
-      fare: Number(document.getElementById("fare").value),
-      seats: Number(document.getElementById("seats").value)
-    };
-
-    const response = await fetch("/api/rides", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-
-    const data = await response.json();
-
-    if (data.success) {
-      showMessage("Ride publish ho gayi!");
-      findRides();
-    } else {
-      showMessage(data.error);
-    }
-  }
+});
 </script>
-
 </body>
 </html>
